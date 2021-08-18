@@ -4,10 +4,9 @@ import pickle
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '4'
 
-sys.path.insert(0, '../../src-py/')
+sys.path.insert(0, '../../moral-classifier/src-py/')
 
 import bert_moral_classification
-import utils
 import moral_utils
 import json
 import traceback
@@ -19,10 +18,9 @@ from debater_python_api.api.sentence_level_index.client.sentence_query_base impo
 from debater_python_api.api.sentence_level_index.client.sentence_query_request import SentenceQueryRequest
 from debater_python_api.api.clients.narrative_generation_client import Polarity
 
-debater_api = DebaterApi('0abeffa5335cc942fc7c43e75d41fe33L05')
+classification_model_path='../../../moral-debater-data/reddit_models/reddit_model/50k'
 
-moral_concepts = moral_utils.get_moral_concepts(preprocess=False)
-moral_concepts = {key:[x.split('/')[-1] for x in item] for key, item in moral_concepts.items()}
+debater_api = DebaterApi('0abeffa5335cc942fc7c43e75d41fe33L05')
 
 
 def get_concepts(debater_api, topics):
@@ -116,8 +114,7 @@ def retrieve_arguments(debater_api, topic, dc, query_size=3000):
     return candidates
 
 def assign_morals(candidates):
-    candidates_morals = bert_moral_classification.get_arg_morals(candidates,
-                                         model_path='/workspace/ceph_data/moral-based-argumentation/bert-emfd-moral-frames/reddit_model/50k')
+    candidates_morals = bert_moral_classification.get_arg_morals(candidates, model_path=classification_model_path)
     
     arguments_and_morals = [{'text': x[0], 'morals': x[1]} for x in zip(candidates, candidates_morals)]
     return arguments_and_morals
@@ -201,7 +198,10 @@ def filter_argumentative_texts(argumentative_texts, moral_class, moral_dict):
 
 def collect_narratives_via_concepts(topics, moral_dict, query_size, use_cache=True):
     try:
-        
+        moral_concepts = moral_utils.get_moral_concepts(preprocess=False)
+        moral_concepts = {key:[x.split('/')[-1] for x in item] for key, item in moral_concepts.items()}
+
+
         # 1. Get Wiki concepts from topics
         topic_concepts = get_concepts(debater_api, topics)
         print(topic_concepts)

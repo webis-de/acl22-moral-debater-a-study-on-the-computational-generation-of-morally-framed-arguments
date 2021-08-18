@@ -14,8 +14,6 @@ from nltk.translate import bleu_score
 from nltk.translate.bleu_score import SmoothingFunction
 from nltk.translate.meteor_score import meteor_score
 
-from distinct_n import distinct_n_sentence_level
-from distinct_n import distinct_n_corpus_level
 
 import numpy as np
 
@@ -83,28 +81,6 @@ def eval_bleu(references, preds, weights=None):
     
     return (score * 100), bleu_scores
 
-def eval_moral_similarity(gt_texts, gen_texts):
-    import moralstrength
-    import numpy as np
-
-    morals = moralstrength.get_available_lexicon_traits()
-    total_error = 0
-    for item in zip(gt_texts, gen_texts):
-        gt_morals  = [moralstrength.string_moral_value(item[0], moral) for moral in morals]
-        gen_morals = [moralstrength.string_moral_value(item[1], moral) for moral in morals]
-        
-        total_error += np.mean([np.abs(x[0] - x[1]) for x in zip(gt_morals, gen_morals)])
-
-
-    return total_error/len(gt_texts)
-
-def eval_distinct(preds, ngrams=1):
-    preds = list(map(lambda x: x.replace('<|endoftext|>', '').split(), preds))
-    
-    corpus_lvl_score = round(distinct_n_corpus_level(preds, ngrams), 3)
-    sentence_lvl_score = [round(distinct_n_corpus_level(p, ngrams), 3) for p in preds]
-    
-    return corpus_lvl_score, sentence_lvl_score
 
 def eval_bertscore(references, preds):
     references  = list(
@@ -138,13 +114,3 @@ def eval_preds(app_name, gt, preds):
     distinct_n, distinct_n_scores = eval_distinct(preds, 1)
     
     return [app_name, bleu1, bleu2, bleu3, meteor, bertscore['BERTScore-F1'], distinct_n], bleu1_scores, bleu2_scores, bleu3_scores, meteor_scores, prec_scores, rec_scores, f1_scores, distinct_n_scores
-
-def user_ideology_from_text(texts, gt_ideologies, ideology_pred_model_path):
-
-    # load the model from disk
-    #'../embeddings/text_to_idology_model.pkl'
-    ideolog_pred_model = joblib.load(ideology_pred_model_path)
-
-    pred_ideologies   = ideolog_pred_model.predict(texts)
-    
-    return accuracy_score(gt_ideologies, pred_ideologies), f1_score(gt_ideologies, pred_ideologies, average='macro'), confusion_matrix(gt_ideologies, pred_ideologies)

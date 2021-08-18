@@ -28,9 +28,11 @@ morals_map = {
     
 }
 
+emfd_wordlist_path= '/home/sile2804/data-tmp/moral-debater-data/repos/eMFD/eMFD_wordlist.csv'
 
-def get_moral_concepts(path='/workspace/ceph_data/moral-based-argumentation/Morality-in-Knowledge-Graphs/MFD-Linking/', preprocess=False):
-    
+
+def get_moral_concepts(data_path, preprocess=False):
+        
     def get_concept(c_url):
         concept = c_url.split('/')[-1]
         if '_(' in concept:
@@ -68,8 +70,8 @@ def average_morals(morals_list):
     return output
 
 
-def get_emfd_moral_dict():
-    emfd_df = pd.read_csv('/workspace/ceph_data/moral-based-argumentation/eMFD/eMFD_wordlist.csv')
+def get_emfd_moral_dict(data_path):
+    emfd_df = pd.read_csv(data_path)
     emfd_df.columns = ['word', 'care', 'fairness', 'loyalty', 'authority',
            'purity', 'care_sent', 'fairness_sent', 'loyalty_sent',
                'authority_sent', 'sanctity_sent']
@@ -87,10 +89,6 @@ def get_emfd_moral_dict():
         moral_dict[moral] = {x[0]:x[1] for x in zip(words, scores)}
     
     return moral_dict
-
-
-moralstrength_dict = moral_data.read_moral_lex('original')
-emfd_dict = get_emfd_moral_dict()
 
 
 def get_moral_words(source, morals=None):
@@ -228,3 +226,8 @@ def scale_word_scores(word_scores):
     resulted_word_scores =zip(words, scaled_scores)
     
     return list(resulted_word_scores)
+
+
+
+moralstrength_dict = moral_data.read_moral_lex('original')
+emfd_dict = get_emfd_moral_dict(emfd_wordlist_path)
