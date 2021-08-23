@@ -31,7 +31,7 @@ morals_map = {
     
 }
 
-emfd_wordlist_path = Config.config().get(section='data_paths', option='emfd_moral_wordlist')
+emfd_wordlist_path = Config.config().get(section='DATAPATHS', option='emfd_moral_wordlist')
 
 
 def get_moral_concepts(data_path, preprocess=False):

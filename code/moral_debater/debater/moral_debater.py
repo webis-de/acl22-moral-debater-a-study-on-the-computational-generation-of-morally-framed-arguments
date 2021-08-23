@@ -17,7 +17,7 @@ from debater_python_api.api.sentence_level_index.client.sentence_query_request i
 from debater_python_api.api.clients.narrative_generation_client import Polarity
 
 
-ibm_api_key = Config.config().get(section='keys', option='ibm_api_key')
+ibm_api_key = Config.config().get(section='KEYS', option='ibm_api_key')
 debater_api = DebaterApi(ibm_api_key)
 
 
