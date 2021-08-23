@@ -276,7 +276,7 @@ def collect_narratives_via_classifier(topics, moral_dict, query_size, old_narrat
             for moral_class_name, morals in moral_dict.items():
                 print('Topic:{}, Moral:{}'.format(topic, moral_class_name))
                 moral_arguments = filter_argumentative_texts(topic_item['arguments'], moral_class_name, moral_dict)
-                print(moral_arguments)
+
                 # 5. Extract claims and evidences
                 claims, evidences = extract_claims_and_evidences(debater_api, topic, moral_arguments, claims_threshold=0.8, evidence_threshold=0.6)
 
