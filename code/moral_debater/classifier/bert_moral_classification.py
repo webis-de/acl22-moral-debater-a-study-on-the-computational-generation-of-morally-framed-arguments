@@ -58,8 +58,10 @@ def moralstrength_lexicon(texts):
 
     return morals
 
-def get_arg_morals_mbert(args):
-
+def get_arg_morals_mbert(args, optional_model_path=None):
+    if optional_model_path is not None:
+        model_path=optional_model_path
+        
     moral2id={0:'authority', 1: 'care', 2:'fairness', 3:'loyalty', 4:'purity'}
     model, tokenizer = load_model(model_path)
     output_morals = []
@@ -74,7 +76,10 @@ def get_arg_morals_mbert(args):
 
     return output_morals
 
-def get_arg_morals(args):
+def get_arg_morals(args, optional_model_path=None):
+    if optional_model_path is not None:
+        model_path=optional_model_path
+        
     moral2id = {0: 'authority', 1: 'care', 2: 'fairness', 3: 'loyalty', 4: 'purity'}
     model, tokenizer = load_model(model_path)
     output_morals = []
