@@ -32,16 +32,7 @@ def process_submit(input):
         response_text = str(response[topic]['x_pro_narrative'])
     else:
         response_text = str(response[topic]['x_con_narrative'])
-    
-    empty_string = True  # marks that response_text is empty
-#     for response_unit in response_list:
-#         if empty_string is True:
-#             response_text = response_unit
-#             empty_string = False
-#         else:
-#             response_text = response_text + '\n\n' + response_unit
 
-#     print(response[topic])
             
     response = Response(response_text, 200, mimetype='application/json')
     return response
