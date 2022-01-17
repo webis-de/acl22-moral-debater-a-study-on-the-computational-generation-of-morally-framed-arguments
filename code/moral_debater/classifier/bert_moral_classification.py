@@ -12,12 +12,21 @@ from moral_debater.config import Config
 
 model_path = Config.config().get(section='DATAPATHS', option='moral_classifier_path')
 
+path='/mnt/ceph/storage/data-tmp/2021/akshitbhatia/50k'
+tokenizer = BertTokenizer.from_pretrained(path)
+model = BertForSequenceClassification.from_pretrained(path, return_dict=True).cuda()
+
 sentencizer = English()
 sentencizer.add_pipe(sentencizer.create_pipe('sentencizer'))
 
+model_loaded = False
+
+
+
 def load_model(path):
-    tokenizer = BertTokenizer.from_pretrained(path)
-    model = BertForSequenceClassification.from_pretrained(path, return_dict=True).cuda()
+    if model_loaded is False:
+        tokenizer = BertTokenizer.from_pretrained(path)
+        model = BertForSequenceClassification.from_pretrained(path, return_dict=True).cuda()
     return model, tokenizer
 
 
@@ -79,9 +88,7 @@ def get_arg_morals_mbert(args, optional_model_path=None):
 def get_arg_morals(args, optional_model_path=None):
     if optional_model_path is not None:
         model_path=optional_model_path
-        
     moral2id = {0: 'authority', 1: 'care', 2: 'fairness', 3: 'loyalty', 4: 'purity'}
-    model, tokenizer = load_model(model_path)
     output_morals = []
     args_sents = [[sent.text for sent in sentencizer(arg).sents] for arg in args]
     
@@ -91,7 +98,9 @@ def get_arg_morals(args, optional_model_path=None):
             continue
 
         input_tokens = tokenizer(arg_sents, max_length=512, return_tensors='pt', truncation=True, padding=True, add_special_tokens=True)
+        
         outputs = model(input_tokens['input_ids'].cuda())[0].detach().cpu().numpy()
+        
         scores  = list(np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True))
         morals  = [moral2id[np.argmax(s)] for s in scores if np.max(s) > 0.5]
         output_morals.append(set(morals))

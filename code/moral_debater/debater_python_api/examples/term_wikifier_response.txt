@@ -1,0 +1,15 @@
+For sentence: "Cars should only assist drivers since self driving cars are too dangerous.", identified annotations are:
+[
+    Text "Cars", within span (0, 4), is wikified to titled "Car", whose inlinks = 6720.
+    Text "drivers", within span (24, 31), is wikified to titled "Driving", whose inlinks = 484.
+    Text "self driving cars", within span (38, 55), is wikified to titled "Autonomous car", whose inlinks = 404.
+]
+
+For sentence: "Self driving car technology will be in conflict with vehicles driven by human users", identified annotations are:
+[
+    Text "Self driving car", within span (0, 16), is wikified to titled "Autonomous car", whose inlinks = 404.
+    Text "technology", within span (17, 27), is wikified to titled "Technology", whose inlinks = 4831.
+    Text "vehicles", within span (53, 61), is wikified to titled "Vehicle", whose inlinks = 1135.
+    Text "human", within span (72, 77), is wikified to titled "Human", whose inlinks = 5161.
+]
+

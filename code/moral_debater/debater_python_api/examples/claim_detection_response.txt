@@ -1,0 +1,15 @@
+topic: We should legalize cannabis
+sentence: A cross-party report found good evidence that cannabis treatments can help alleviate the symptoms of chronic pain, multiple sclerosis, nausea and vomiting, particularly in the context of chemotherapy, and anxiety.
+score: 0.9993
+
+topic: We should legalize cannabis
+sentence: A recent federal study indicates that cannabis is dangerous
+score: 0.9991
+
+topic: We should legalize cannabis
+sentence: cannabis is dangerous
+score: 0.9990
+
+topic: We should legalize cannabis
+sentence: The apple tree is green
+score: 0.0170

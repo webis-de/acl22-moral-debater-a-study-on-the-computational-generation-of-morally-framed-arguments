@@ -1,0 +1,11 @@
+sentence: Cars should only provide assisted driving, not complete autonomy.
+topic: We should further explore the development of autonomous vehicles
+score: 0.6318
+
+sentence: Cars cars cars cars who cares
+topic: We should further explore the development of autonomous vehicles
+score: 0.2810
+
+sentence: that he given sun roads sea
+topic: We should further explore the development of autonomous vehicles
+score: 0.2659

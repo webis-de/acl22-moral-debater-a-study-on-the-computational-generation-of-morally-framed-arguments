@@ -1,0 +1,10 @@
+[
+  As of 2017, the domestic cat was the second-most popular pet in the U.S.
+  The cat (Felis catus) is a small carnivorous mammal
+  Cats are similar in anatomy to the other felid species
+]
+[
+  The origin of the domestic dog includes the dogs evolutionary divergence from the wolf
+  Domestic dogs have been selectively bred for millennia for various behaviors, sensory capabilities, and physical attributes.
+  Dogs are highly variable in height and weight.
+]

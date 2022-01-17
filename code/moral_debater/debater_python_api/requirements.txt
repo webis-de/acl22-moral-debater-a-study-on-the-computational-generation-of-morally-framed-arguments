@@ -1,0 +1,8 @@
+requests==2.21.0
+prettytable==0.7.2
+sklearn==0.0
+matplotlib==3.0.3
+numpy
+pandas
+spacy==2.2.1
+PyHamcrest==2.0.2

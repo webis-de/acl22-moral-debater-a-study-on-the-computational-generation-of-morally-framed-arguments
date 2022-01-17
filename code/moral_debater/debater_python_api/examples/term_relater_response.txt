@@ -1,0 +1,3 @@
+for pair: ['Soldier', 'Army'], relatedness score: 0.9146
+for pair: ['Pupil', 'Teacher'], relatedness score: 0.7712
+for pair: ['Ball', 'Tree'], relatedness score: 0.0751

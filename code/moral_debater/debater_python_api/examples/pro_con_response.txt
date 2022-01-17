@@ -1,0 +1,10 @@
+With respect to topic: "Social media is harmful", sentences and their scores are:
+
+Sentence : Social media disproportionally promotes fake news
+Score: 0.9994
+
+Sentence : Social media is wonderful for human relationship
+Score: -0.9992
+
+Sentence : The air in Los Angeles is clear
+Score: -0.1038

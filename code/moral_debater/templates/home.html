@@ -1,0 +1,81 @@
+<html>
+    <head>
+        <script src="../static/read.js"></script>
+        <link rel="stylesheet" href="../static/file.css">
+    </head>
+    
+
+    <body>
+        <h1 class = "intro">Moral Based Debator</h1>
+        
+            <ul>
+                <li>
+                
+                <div class="moralbox">
+                    <h2>choose the moral factors</h2>    
+                    <div class='moraloptions'>
+                    <input type="checkbox" id="moral1" name="care" checked>
+                    <label for="care">care</label>
+                
+                    <input type="checkbox" id="moral2" name="aurhority" >
+                    <label for="aurhority">aurhority</label>
+                
+                    <input type="checkbox" id="moral3" name="fairness">
+                    <label for="fairness">fairness</label>
+                
+                    <input type="checkbox" id="moral4" name="loyality">
+                    <label for="loyality">loyality</label>
+                
+                    <input type="checkbox" id="moral5" name="purity">
+                    <label for="purity">purity</label>
+                </div>
+                </div>
+                
+                
+                <div class = 'topic'>
+                    <h2>Topic</h2>    
+                    <textarea id="topics" name="topics" rows="1" cols="10">Abortion</textarea>
+                </div>
+
+                <h3>Select the stance</h3>    
+                <div class="stance">
+                    
+                    <input type="radio" id="pro" name="stance" value="pro" checked>
+                    <label for="pro">Pro</label>
+                    <input type="radio" id="con" name="stance" value="con">
+                    <label for="con">Con</label>
+
+                </div>
+
+                <button value="Submit" onclick='start_submit()'>Submit</button>
+
+
+                </li>
+
+                <li>
+                <div class="options">
+                    <h3>Query Size</h3>
+                    <textarea id="size" name="size_query" rows="1" cols="5">10</textarea>
+                    
+                    
+                    <h3>Claim Threshold</h3>
+                    <h5>keep threshold between 0 and 1</h5>
+                    
+                    <textarea id="claim_area" name="claim" rows="1" cols="4">0.8</textarea>
+
+                    <h3>Evidence Threshold</h3>
+                    <h5>keep threshold between 0 and 1</h5>
+                    <textarea id="evidence_area" name="evidence" rows="1" cols="4">0.6</textarea>
+                    
+                    
+                </div>
+            </li>
+                
+                <li class="results">
+                    <h2>Here the results are displayed.</h2>
+                    <textarea id="resultsArea" rows="10" cols = "45"></textarea>
+                    <p id="reqprocessed">Process yet to start</p>
+                </li>             
+            </ul>
+    </body>
+</html>

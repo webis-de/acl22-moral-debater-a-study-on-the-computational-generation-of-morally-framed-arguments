@@ -1,3 +1,7 @@
 configparser
 moralstrength
 importlib_resources
+transformers
+spacy==2.2.1
+flask
+typing_extensions

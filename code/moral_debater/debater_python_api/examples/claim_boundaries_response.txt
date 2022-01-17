@@ -1,0 +1,5 @@
+in sentence: A cross-party report found good evidence that cannabis treatments can help alleviate the symptoms of chronic pain, multiple sclerosis, nausea and vomiting, particularly in the context of chemotherapy, and anxiety.
+claim was detected in positions [46, 212], being the claim: cannabis treatments can help alleviate the symptoms of chronic pain, multiple sclerosis, nausea and vomiting, particularly in the context of chemotherapy, and anxiety
+
+in sentence: A recent federal study indicates that cannabis is dangerous
+claim was detected in positions [38, 59], being the claim: cannabis is dangerous
