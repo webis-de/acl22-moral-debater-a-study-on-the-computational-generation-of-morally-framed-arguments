@@ -1,10 +1,21 @@
 from flask import Flask, render_template, url_for, request, Response
+from flask_caching import Cache
 from moral_debater.debater import moral_debater
 from moral_debater.classifier import bert_moral_classification
+
 import torch
+
+
+config = {
+    "DEBUG": True,          # some Flask specific configs
+    "CACHE_TYPE": "SimpleCache",  # Flask-Caching related configs
+    "CACHE_DEFAULT_TIMEOUT": 300
+}
 
 print(torch.__version__)
 app = Flask(__name__)
+app.config.from_mapping(config)
+cache = Cache(app)
 
 @app.route("/")
 def index():
@@ -26,7 +37,7 @@ def process_submit(input):
     evidence_thresh = float(input_list[4])
     
     moral_dict = {'x':set(morals)}
-    response = moral_debater.collect_narratives_via_classifier_stance([topic], moral_dict, query_size, stance, claim_thresh, evidence_thresh, old_narratives={})
+    response = moral_debater.collect_narratives_via_classifier([topic], moral_dict, query_size, stance, claim_thresh, evidence_thresh, old_narratives={})
     response_text='empty'
     if stance == 'pro':
         response_text = str(response[topic]['x_pro_narrative'])

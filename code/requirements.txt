@@ -4,4 +4,5 @@ importlib_resources
 transformers
 spacy==2.2.1
 flask
+Flask-Caching
 typing_extensions

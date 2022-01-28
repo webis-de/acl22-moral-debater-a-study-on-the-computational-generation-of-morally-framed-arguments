@@ -19,7 +19,6 @@ from debater_python_api.api.clients.narrative_generation_client import Polarity
 ibm_api_key = Config.config().get(section='KEYS', option='ibm_api_key')
 debater_api = DebaterApi(ibm_api_key)
 
-
 def get_concepts(debater_api, topics):
     term_wikifier_client = debater_api.get_term_wikifier_client()
     annotation_arrays = term_wikifier_client.run(topics)
@@ -209,140 +208,19 @@ def filter_argumentative_texts(argumentative_texts, moral_class, moral_dict):
 
     return filtered_texts
 
+def filter_argumentative_texts_new(argumentative_texts, morals):
+    filtered_texts = []
+    for arg in argumentative_texts:
+        if len(morals.intersection(arg['morals'])) > 0:
+            filtered_texts.append(arg['text'])
 
-def collect_narratives_via_concepts(topics, moral_dict, query_size, use_cache=True):
+    return filtered_texts
+
+
+def collect_narratives_via_classifier(topics, moral_dict, query_size, polarity, claims_threshold=0.8, evidence_threshold=0.6, old_narratives={}):
     try:
-        moral_concepts = moral_utils.get_moral_concepts(preprocess=False)
-        moral_concepts = {key: [x.split('/')[-1] for x in item] for key, item in moral_concepts.items()}
-
-        # 1. Get Wiki concepts from topics
-        topic_concepts = get_concepts(debater_api, topics)
-        print(topic_concepts)
-        topic_narratives = {x: {'dc': topic_concepts[i]} for i, x in enumerate(topics)}
-
-        for topic, topic_item in list(topic_narratives.items()):
-            # 4. Generate moral narratives
-            for moral_class_name, morals in moral_dict.items():
-                print('Topic:{}, Moral:{}'.format(topic, moral_class_name))
-
-                if '{}_arguments'.format(moral_class_name) not in topic_item or use_cache == False:
-                    # 2. Collect arguments for topics
-                    all_moral_concepts = []
-                    for moral in morals:
-                        all_moral_concepts += [x.split('/')[-1] for x in moral_concepts[moral]]
-
-                    topic_item['{}_arguments'.format(moral_class_name)] = list(
-                        retrieve_arguments_moral_concepts(debater_api, topic, all_moral_concepts,
-                                                          query_size=query_size))
-
-                moral_arguments = topic_item['{}_arguments'.format(moral_class_name)]
-                # 5. Extract claims and evidences
-                claims, evidences = extract_claims_and_evidences(debater_api, topic, moral_arguments,
-                                                                 claims_threshold=0.8, evidence_threshold=0.6)
-
-                for polarity in [Polarity.PRO, Polarity.CON]:
-                    # 6. Create narrative
-                    moral_narrative = create_narrative(debater_api, topic, topic_item['dc'][0], polarity, claims,
-                                                       evidences)
-                    if len(moral_narrative.paragraphs) < 3:
-                        print('Narrative is empty...')
-                    topic_item['{}_{}_narrative'.format(moral_class_name,
-                                                        'pro' if polarity == Polarity.PRO else 'con')] = moral_narrative
-
-            # 5. Generate general narrative
-            if 'general_arguments' not in topic_item or use_cache == False:
-                topic_item['general_arguments'] = list(
-                    retrieve_arguments_moral_concepts(debater_api, topic, [], query_size=query_size))
-
-            general_arguments = topic_item['general_arguments']
-            # 5. Extract claims and evidences
-            claims, evidences = extract_claims_and_evidences(debater_api, topic, general_arguments,
-                                                             claims_threshold=0.8, evidence_threshold=0.6)
-            for polarity in [Polarity.PRO, Polarity.CON]:
-                # 6. Create narrative
-                general_narrative = create_narrative(debater_api, topic, topic_item['dc'][0], polarity, claims,
-                                                     evidences)
-                if len(general_narrative.paragraphs) < 3:
-                    print('General Narrative is empty...')
-                topic_item['{}_{}_narrative'.format('general',
-                                                    'pro' if polarity == Polarity.PRO else 'con')] = general_narrative
-
-
-
-    except Exception as e:
-        print(e)
-    finally:
-        return topic_narratives
-
-
-# def collect_narratives_via_classifier(topics, moral_dict, query_size, old_narratives=None, use_cache=True):
-#     try:
-
-#         # 1. Get Wiki concepts from topics
-#         topic_concepts = get_concepts(debater_api, topics)
-#         topic_narratives = {}
-#         for i, topic in enumerate(topics):
-#             if topic in old_narratives:
-#                 topic_narratives[topic] = old_narratives[topic]
-#             else:
-#                 topic_narratives[topic] = {'dc': topic_concepts[i]}
-
-#         for topic, topic_item in list(topic_narratives.items()):
-
-#             if 'arguments' not in topic_item or use_cache == False:
-#                 # 2. Collect arguments for topics
-#                 topic_item['arguments'] = retrieve_arguments(debater_api, topic, topic_item['dc'],
-#                                                              query_size=query_size)
-#                 # 3. Tag them with morals
-#                 topic_item['arguments'] = assign_morals(topic_item['arguments'])
-
-#             # 4. Generate moral narratives
-#             for moral_class_name, morals in moral_dict.items():
-#                 print('Topic:{}, Moral:{}'.format(topic, moral_class_name))
-#                 moral_arguments = filter_argumentative_texts(topic_item['arguments'], moral_class_name, moral_dict)
-
-#                 # 5. Extract claims and evidences
-#                 claims, evidences = extract_claims_and_evidences(debater_api, topic, moral_arguments,
-#                                                                  claims_threshold=0.8, evidence_threshold=0.6)
-
-#                 for polarity in [Polarity.PRO, Polarity.CON]:
-#                     narrative_key = '{}_{}_narrative'.format(moral_class_name,
-#                                                              'pro' if polarity == Polarity.PRO else 'con')
-#                     if narrative_key not in topic_item or use_cache == False:
-#                         # 6. Create narrative
-#                         moral_narrative = create_narrative(debater_api, topic, topic_item['dc'][0], polarity, claims,
-#                                                            evidences)
-#                         if len(moral_narrative.paragraphs) < 3:
-#                             print('Narrative is empty...')
-#                         topic_item[narrative_key] = moral_narrative
-
-#             # 5. Generate general narrative
-#             if 'general_pro_narrative' not in topic_item or 'general_con_narrative' not in topic_item or use_cache == False:
-#                 all_arguments = [x['text'] for x in topic_item['arguments']]
-#                 # 5. Extract claims and evidences
-#                 claims, evidences = extract_claims_and_evidences(debater_api, topic, all_arguments,
-#                                                                  claims_threshold=0.8, evidence_threshold=0.6)
-#                 for polarity in [Polarity.PRO, Polarity.CON]:
-#                     narrative_key = '{}_{}_narrative'.format('general', 'pro' if polarity == Polarity.PRO else 'con')
-#                     if narrative_key not in topic_item or use_cache == False:
-#                         # 6. Create narrative
-#                         general_narrative = create_narrative(debater_api, topic, topic_item['dc'][0], polarity, claims,
-#                                                              evidences)
-#                         print('Topic:{}, Moral:{}'.format(topic, 'general'))
-#                         if len(general_narrative.paragraphs) < 3:
-#                             print('General Narrative is empty...')
-#                         topic_item['{}_{}_narrative'.format('general',
-#                                                             'pro' if polarity == Polarity.PRO else 'con')] = general_narrative
-
-
-#     except Exception as e:
-#         print(e)
-#     finally:
-#         return topic_narratives
-
-
-def collect_narratives_via_classifier_stance(topics, moral_dict, query_size, polarity, claims_threshold=0.8, evidence_threshold=0.6, old_narratives={}):
-    try:
+        
+        print('Topic:', topics[0], ' moral_dict: ', moral_dict, ' query_size:', query_size, ' claims_threshold:', claims_threshold, 'evidence_threshold:', evidence_threshold)
 
         # 1. Get Wiki concepts from topics
         start_time=time.time()
@@ -365,6 +243,7 @@ def collect_narratives_via_classifier_stance(topics, moral_dict, query_size, pol
                 topic_item['arguments'] = retrieve_arguments(debater_api, topic, topic_item['dc'],
                                                              query_size=query_size)
                 
+                print('Number of retrieved arguments:', len(topic_item['arguments']))
                 print('time elapsed in retrieve_argument() is: ', time.time()-start_time)
                 
                 # 3. Tag them with morals
@@ -377,8 +256,9 @@ def collect_narratives_via_classifier_stance(topics, moral_dict, query_size, pol
                 print('Topic:{}, Moral:{}'.format(topic, moral_class_name))
                 
                 start_time=time.time()
-                moral_arguments = filter_argumentative_texts(topic_item['arguments'], moral_class_name, moral_dict)
+                moral_arguments = filter_argumentative_texts_new(topic_item['arguments'], morals)
                 print('time elapsed in filtering of moral arguments: ',time.time()-start_time)
+                print('Number of arguments after filtering:', len(moral_arguments))
                 
                 # 5. Extract claims and evidences
                 start_time=time.time()
@@ -404,27 +284,6 @@ def collect_narratives_via_classifier_stance(topics, moral_dict, query_size, pol
                         print('Narrative is empty...')
                     topic_item[narrative_key] = moral_narrative
                     
-                
-                
-
-            # 5. Generate general narrative
-#             if 'general_pro_narrative' not in topic_item or 'general_con_narrative' not in topic_item:
-#                 all_arguments = [x['text'] for x in topic_item['arguments']]
-#                 # 5. Extract claims and evidences
-#                 claims, evidences = extract_claims_and_evidences(debater_api, topic, all_arguments,
-#                                                                  claims_threshold=0.8, evidence_threshold=0.6)
-#                 #for polarity in [Polarity.PRO, Polarity.CON]:
-#                 narrative_key = '{}_{}_narrative'.format('general', polarity)
-#                 if narrative_key not in topic_item:
-#                     # 6. Create narrative
-#                     general_narrative = create_narrative(debater_api, topic, topic_item['dc'][0], polarity, claims,
-#                                                          evidences)
-#                     print('Topic:{}, Moral:{}'.format(topic, 'general'))
-#                     if len(general_narrative.paragraphs) < 3:
-#                         print('General Narrative is empty...')
-#                     topic_item['{}_{}_narrative'.format('general',polarity)] = general_narrative
-
-
     except Exception as e:
         print(e)
     finally:
