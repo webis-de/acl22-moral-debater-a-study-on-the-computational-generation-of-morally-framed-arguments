@@ -7,7 +7,6 @@ import traceback
 import time
 import pandas as pd
 
-from moral_debater.classifier import bert_moral_classification
 from moral_debater.utils import moral_utils
 from moral_debater.config import Config
 
@@ -23,18 +22,20 @@ from spacy.lang.en import English
 
 class MoralDebater(object):
 
-    def __init__(self, cache):
+    def __init__(self):
         ibm_api_key = Config.config().get(section='KEYS', option='ibm_api_key')
         model_path = Config.config().get(section='DATAPATHS', option='moral_classifier_path')
 
         self.debater_api = DebaterApi(ibm_api_key)
-        self.cache = cache
 
-        self.moral_tokenizer = BertTokenizer.from_pretrained(path)
-        self.moral_model = BertForSequenceClassification.from_pretrained(model_path, return_dict=True).cuda()
+        self.moral_tokenizer = BertTokenizer.from_pretrained(model_path)
+        self.moral_model = BertForSequenceClassification.from_pretrained(model_path, return_dict=True)
 
         self.sentencizer = English()
-        self.sentencizer.add_pipe(sentencizer.create_pipe('sentencizer'))
+        self.sentencizer.add_pipe(self.sentencizer.create_pipe('sentencizer'))
+        
+        self.cache = {}
+        self.cache_path = './cache_path.json'
 
     def get_concepts(self, topic):
         term_wikifier_client = self.debater_api.get_term_wikifier_client()
@@ -77,7 +78,7 @@ class MoralDebater(object):
         query_request = SentenceQueryRequest(query=query.get_sentence_query(), size=query_size, sentenceLength=(7, 60))
         candidates.update(searcher.run(query_request))
 
-        return candidates
+        return list(candidates)
 
 
     def get_arg_morals(self, args):
@@ -90,13 +91,13 @@ class MoralDebater(object):
                 output_morals.append(set([]))
                 continue
 
-            input_tokens = self.tokenizer(arg_sents, max_length=512, return_tensors='pt', truncation=True, padding=True, add_special_tokens=True)
+            input_tokens = self.moral_tokenizer(arg_sents, max_length=512, return_tensors='pt', truncation=True, padding=True, add_special_tokens=True)
             
-            outputs = self.model(input_tokens['input_ids'].cuda())[0].detach().cpu().numpy()
+            outputs = self.moral_model(input_tokens['input_ids'])[0].detach().cpu().numpy()
             
             scores  = list(np.exp(outputs) / np.exp(outputs).sum(-1, keepdims=True))
             morals  = [moral2id[np.argmax(s)] for s in scores if np.max(s) > 0.5]
-            output_morals.append(set(morals))
+            output_morals.append(list(set(morals)))
             
 
         return output_morals
@@ -116,27 +117,21 @@ class MoralDebater(object):
                 print('finding evidences from candidate sentences')
                 candidate_motion_pairs = [{'sentence': candidate, 'topic': topic} for candidate in sentences]
                 
-                start_time=time.time()
                 evidence_scores = self.debater_api.get_evidence_detection_client().run(candidate_motion_pairs)
                 
-                print('time elapsed in run() of evidenceDetectionClient: ',time.time()-start_time)
                 evidences = [sentences[i] for i in range(len(evidence_scores)) if evidence_scores[i] > evidence_threshold]
                 print('Number of evidences: {}'.format(len(evidences)))
 
                 # Find claims from the candidate sentences
                 print('finding claims from candidate sentences')
-                start_time=time.time()
                 claim_scores = self.debater_api.get_claim_detection_client().run(candidate_motion_pairs)
-                print('time elapsed in claim detection: ', time.time()-start_time)
                 
                 claim_sentences = [sentences[i] for i in range(len(claim_scores)) if claim_scores[i] > claims_threshold]
                 print('Number of claims: {}'.format(len(claim_sentences)))
 
                 # Extract claims from claims sentences
-                start_time=time.time()
                 claims = self.debater_api.get_claim_boundaries_client().run(sentences=claim_sentences)
                 claims_text = [claim['claim'] for claim in claims]
-                print('time elapsed in claim extraction: ', time.time()-start_time)
 
                 return claims_text, evidences
 
@@ -167,9 +162,7 @@ class MoralDebater(object):
                 # and finally -- generate the speech
                 narrative_generation_client = self.debater_api.get_narrative_generation_client()
                 
-                print(dc)
-                print(topic)
-                #             print(arguments_list)
+
                 speech = narrative_generation_client.run(topic=topic, dc=dc, sentences=arguments_list,
                                                          pro_con_scores=pro_con_scores, polarity=polarity)
                 if speech.paragraphs == None:
@@ -200,37 +193,41 @@ class MoralDebater(object):
             
         print('Topic:', topic, ' moral_dict: ', moral_dict, ' query_size:', query_size, ' claims_threshold:', claims_threshold, 'evidence_threshold:', evidence_threshold)
 
-        topic_item = self.cache.get('topic')
-        
-        if topic_item == None or topic_item['query_size'] =! query_size:
+        topic_item = self.cache[topic] if topic in self.cache else None
+        if topic_item == None or topic_item['query_size'] < query_size: #if we are requireing more arguments then we have to update the chat
             topic_item = {}
             # 1. Get Wiki concepts from topics
-            topic_item['dc'] = self.get_concepts(self.debater_api, topics)
+            topic_item['dc'] = self.get_concepts(topic)
             # 2. Collect arguments for topics
-            topic_item['arguments'] = retrieve_arguments(self.debater_api, topic, topic_item['dc'], query_size=query_size)
+            topic_item['arguments'] = self.retrieve_arguments(topic, topic_item['dc'], query_size=query_size)
             # 3. Tag them with morals
-            topic_item['arguments'] = assign_morals(topic_item['arguments'])
+            topic_item['arguments'] = self.assign_morals(topic_item['arguments'])
             topic_item['query_size'] = query_size                
             print('Number of retrieved arguments:', len(topic_item['arguments']))
-            
+            self.cache[topic] = topic_item
+
+        else:   
+            print('Load topic from the cache!!')
             
         # 4. Generate moral narratives
         for moral_class_name, morals in moral_dict.items():
             print('Topic:{}, Moral:{}'.format(topic, moral_class_name))
             
-            moral_arguments = filter_argumentative_texts(topic_item['arguments'], morals)
+            moral_arguments = self.filter_argumentative_texts(topic_item['arguments'], morals)
             print('Number of arguments after filtering:', len(moral_arguments))
             
 
-            if 'claims_and_evidences' not in topic_item or topic_item['claims_and_evidences']['claims_threshold'] != claims_threshold or topic_item['claims_and_evidences'] != evidence_threshold:
+            if 'claims_and_evidences' not in topic_item or topic_item['claims_and_evidences']['claims_threshold'] != claims_threshold or topic_item['claims_and_evidences']['evidence_threshold'] != evidence_threshold:
                 # 5. Extract claims and evidences
-                claims, evidences = extract_claims_and_evidences(topic, moral_arguments, claims_threshold, evidence_threshold)
+                claims, evidences = self.extract_claims_and_evidences(topic, moral_arguments, claims_threshold, evidence_threshold)
                 topic_item['claims_and_evidences'] = {
                     'claims': claims,
                     'evidences': evidences,
                     'claims_threshold': claims_threshold,
                     'evidence_threshold': evidence_threshold
                 }
+
+                self.cache[topic] = topic_item
 
             else:
                 claims = topic_item['claims_and_evidences']['claims']
@@ -244,11 +241,21 @@ class MoralDebater(object):
                 # 6. Create narrative
                 polarity_enum = Polarity.PRO if polarity=='pro' else Polarity.CON
                 
-                moral_narrative = create_narrative(self.debater_api, topic, topic_item['dc'][0], polarity_enum, claims,
-                                                   evidences)
+                moral_narrative = self.create_narrative(topic, topic_item['dc'][0], polarity_enum, claims, evidences)
                 if len(moral_narrative.paragraphs) < 3:
                     print('Narrative is empty...')
-                topic_item[narrative_key] = moral_narrative
+                topic_item[narrative_key] = str(moral_narrative)
+                self.cache[topic] = topic_item
+            else:
+                print('Retrieving Narrative from cahe...')
+                
+        
+
+        #save the cache everytime to the desk
+        with open(self.cache_path, 'w') as cf:
+            json.dump(self.cache, cf)
+
+        return topic_item
                         
         # except Exception as e:
         #     print(e)

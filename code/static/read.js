@@ -50,6 +50,8 @@ function start_submit(){
   text_string = text_string + '_' + claim_value + '_' +evidence_value;
     
 
+  var result = document.getElementById("resultsArea");
+  result.value= '';
 
   const request = new XMLHttpRequest();
   request.open('GET','/submit/'+input_string+'$'+text_string);
