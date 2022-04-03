@@ -1,81 +1,203 @@
-<html>
-    <head>
-        <script src="../static/read.js"></script>
-        <link rel="stylesheet" href="../static/file.css">
-    </head>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>The moral Debater</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="../static/read.js"></script>
+  <style>
+    /* Remove the navbar's default margin-bottom and rounded borders */ 
+    .navbar {
+      margin-bottom: 0;
+      border-radius: 0;
+    }
     
+    /* Set height of the grid so .sidenav can be 100% (adjust as needed) */
+    .row.content {height: 450px}
+    
+    /* Set gray background color and 100% height */
+    .sidenav {
+      padding-top: 20px;
+      background-color: #f1f1f1;
+      height: 100%;
+    }
+    
+    /* Set black background color, white text and some padding */
+    footer {
+      background-color: #555;
+      color: white;
+      padding: 15px;
+    }
+    
+    /* On small screens, set height to 'auto' for sidenav and grid */
+    @media screen and (max-width: 767px) {
+      .sidenav {
+        height: auto;
+        padding: 15px;
+      }
+      .row.content {height:auto;} 
+    }
+  </style>
+</head>
+<body>
 
-    <body>
-        <h1 class = "intro">Moral Based Debator</h1>
+<nav class="navbar navbar-inverse">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>                        
+      </button>
+    </div>
+    <div class="collapse navbar-collapse" id="myNavbar">
+      <ul class="nav navbar-nav">
+        <li class="active"><a href="#">Home</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+      </ul>
+    </div>
+  </div>
+</nav>
+  
+<div class="container-fluid text-center">    
+  <div class="content">
+    <div class="col-sm-10 text-left"> 
+      <h1>The moral Debater</h1>
+      <p>This is a demo website of our system proposed in the<q>The Moral Debater: A Study on the Computational Generation of Morally Framed Arguments </q> paper.</p>
+      <hr>
+      </div>
+  </div>
+</div>
+
+<div class="container-fluid">
+  <form>
+  	<div class="row">
+	        <div class="control col-md-2">
+              <label for="topic" class="form-label">Select Topic</label>
+                <p>Select one of the prepared topics, or enter a new topic but then the execution time will take a while.</p>
+              <input class="form-control" list="datalistOptions" id="topics" value="Abortion" placeholder="Type to search...">
+              <datalist id="datalistOptions">
+                <option value='Gay Marriage'>
+                <option value='Abortion'>
+                <option value='Death Penalty'>
+                <option value='Minimum Wage'>
+                <option value= 'Affirmative Action'>
+                <option value='Capitalism'>
+                <option value= 'Global Warming'>
+                <option value='Free Trade'>
+                <option value='Border Fence'>
+                <option value='Flat Tax'>
+                <option value='Legalized Prostitution'>
+                <option value='Socialism'>
+              </datalist>              
+            </div>
         
-            <ul>
-                <li>
-                
-                <div class="moralbox">
-                    <h2>choose the moral factors</h2>    
-                    <div class='moraloptions'>
-                    <input type="checkbox" id="moral1" name="care" checked>
-                    <label for="care">care</label>
-                
-                    <input type="checkbox" id="moral2" name="aurhority" >
-                    <label for="aurhority">aurhority</label>
-                
-                    <input type="checkbox" id="moral3" name="fairness">
-                    <label for="fairness">fairness</label>
-                
-                    <input type="checkbox" id="moral4" name="loyality">
-                    <label for="loyality">loyality</label>
-                
-                    <input type="checkbox" id="moral5" name="purity">
-                    <label for="purity">purity</label>
+            <div class="col-md-2">
+                <label for="moral" class="form-label">Select Morals</label>
+                <p>Check morals that the generated argument should focus on</p>
+                <div class="form-check">
+                <input class="form-check-input" type="checkbox" value="care" id="moral1" checked>
+                <label class="form-check-label" for="flexCheckDefault">
+                Care
+                </label>
                 </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="authority" id="moral2">
+                  <label class="form-check-label" for="moral">
+                    Authority
+                </label>
                 </div>
-                
-                
-                <div class = 'topic'>
-                    <h2>Topic</h2>    
-                    <textarea id="topics" name="topics" rows="1" cols="10">Abortion</textarea>
+                <div class="form-check">
+                      <input class="form-check-input" type="checkbox" value="fairness" id="moral3">
+                      <label class="form-check-label" for="moral">
+                        Fairness
+                    </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="loyalty" id="moral4">
+                  <label class="form-check-label" for="moral">
+                    Loyalty
+                </label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" value="purity" id="moral5">
+                  <label class="form-check-label" for="moral">
+                    Purity
+                </label>
+                </div>
+            </div>
+        
+            <div class="col-md-4">
+                <label for="inputZip" class="form-label">Select Stance</label>
+                <p>Pro or Con argument towards the provided topic?</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="gridRadios" id="pro" value="pro" checked>
+                    <label class="form-check-label" for="gridRadios1">
+                        Pro
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="gridRadios" id="con" value="con">
+                    <label class="form-check-label" for="gridRadios2">
+                        Con
+                    </label>
                 </div>
 
-                <h3>Select the stance</h3>    
-                <div class="stance">
-                    
-                    <input type="radio" id="pro" name="stance" value="pro" checked>
-                    <label for="pro">Pro</label>
-                    <input type="radio" id="con" name="stance" value="con">
-                    <label for="con">Con</label>
+            </div>
+            </div>
 
+			<div class="row">
+            <div class="col-md-2">
+                <label for="inputCity" class="form-label">Query Size</label>
+                <p>Number of sentences to be retrieved from the Project Debater's API</p>
+                <input type="text" class="form-control" id="size" value="1000">
+            </div>
+            <div class="col-md-2">
+                <label for="inputState" class="form-label">Claim Threshold</label>
+                <p>The sentence likelihood of a sentence bing a claim on the topic.</p>
+                <input type="text" class="form-control" id="claim_area" value="0.8">
+            </div>
+            <div class="col-md-2">
+                <label for="inputZip" class="form-label">Evidence Threshold</label>
+                <p>The sentence likelihood of a sentence containing an evidence.</p>
+                <input type="text" class="form-control" id="evidence_area" value="0.6">
+            </div>
+			</div>
+
+			<br>
+			<div class="row">
+              <div class="col-md-2">
+                <button class="btn btn-primary" id="gen_btn" type="button" onclick='event.preventDefault(); start_submit()' >
+                  Generate
+                </button>
+              </div>
+              <div class="col-md-4">
+                <div id="progressbar" class="progress" hidden>
+                  <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%">Fetching...
+                  </div>
                 </div>
-
-                <button value="Submit" onclick='start_submit()'>Submit</button>
-
-
-                </li>
-
-                <li>
-                <div class="options">
-                    <h3>Query Size</h3>
-                    <textarea id="size" name="size_query" rows="1" cols="5">10</textarea>
-                    
-                    
-                    <h3>Claim Threshold</h3>
-                    <h5>keep threshold between 0 and 1</h5>
-                    
-                    <textarea id="claim_area" name="claim" rows="1" cols="4">0.8</textarea>
-
-                    <h3>Evidence Threshold</h3>
-                    <h5>keep threshold between 0 and 1</h5>
-                    <textarea id="evidence_area" name="evidence" rows="1" cols="4">0.6</textarea>
-                    
-                    
+              </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="col-12">
+                        <textarea id="argument_area" class="form-control" rows="8" aria-label="..." placeholder="Generated argument appears here.."></textarea>
+                    </div>
                 </div>
-            </li>
-                
-                <li class="results">
-                    <h2>Here the results are displayed.</h2>
-                    <textarea id="resultsArea" rows="10" cols = "45"></textarea>
-                    <p id="reqprocessed">Process yet to start</p>
-                </li>             
-            </ul>
-    </body>
+            </div>
+            <div class="row">
+            </div>
+      <br>
+  </form>
+</div>
+
+<footer class="container-fluid text-center">
+</footer>
+
+</body>
 </html>

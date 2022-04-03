@@ -36,6 +36,10 @@ class MoralDebater(object):
         
         self.cache = {}
         self.cache_path = './cache_path.json'
+        
+        if os.path.exists(self.cache_path):
+            print('Loading cache...')
+            self.cache = json.load(open(self.cache_path))
 
     def get_concepts(self, topic):
         term_wikifier_client = self.debater_api.get_term_wikifier_client()
@@ -46,7 +50,8 @@ class MoralDebater(object):
     def retrieve_arguments(self, topic, dc, query_size=3000):
 
         searcher = self.debater_api.get_index_searcher_client()
-
+        
+        print('Running first query...')
         candidates = set()
         # Simple query
         query = SimpleQuery(is_ordered=True, window_size=1)
@@ -55,7 +60,8 @@ class MoralDebater(object):
         query_request = SentenceQueryRequest(query=query.get_sentence_query(), size=query_size, sentenceLength=(7, 60))
         result = searcher.run(query_request)
         candidates.update(result)
-
+        
+        print('Running second query...')
         # Concept causes something
         query = SimpleQuery(is_ordered=True, window_size=12)
         # query.add_concept_element(dc)
@@ -64,6 +70,7 @@ class MoralDebater(object):
         query_request = SentenceQueryRequest(query=query.get_sentence_query(), size=query_size, sentenceLength=(7, 60))
         candidates.update(searcher.run(query_request))
 
+        print('Running third query...')
         query = SimpleQuery(is_ordered=False, window_size=12)
         # query.add_concept_element(dc)
         query.add_normalized_element([x.lower() for x in topic.split()])
@@ -88,7 +95,7 @@ class MoralDebater(object):
         
         for arg_sents in args_sents:
             if len(arg_sents) == 0:
-                output_morals.append(set([]))
+                output_morals.append([])
                 continue
 
             input_tokens = self.moral_tokenizer(arg_sents, max_length=512, return_tensors='pt', truncation=True, padding=True, add_special_tokens=True)
@@ -200,54 +207,60 @@ class MoralDebater(object):
             topic_item['dc'] = self.get_concepts(topic)
             # 2. Collect arguments for topics
             topic_item['arguments'] = self.retrieve_arguments(topic, topic_item['dc'], query_size=query_size)
-            # 3. Tag them with morals
-            topic_item['arguments'] = self.assign_morals(topic_item['arguments'])
-            topic_item['query_size'] = query_size                
+            topic_item['query_size'] = query_size
             print('Number of retrieved arguments:', len(topic_item['arguments']))
             self.cache[topic] = topic_item
 
-        else:   
+        else:
             print('Load topic from the cache!!')
+            topic_item = self.cache[topic]
+
+        if 'claims_and_evidences' not in topic_item or topic_item['claims_and_evidences']['claims_threshold'] != claims_threshold or topic_item['claims_and_evidences']['evidence_threshold'] != evidence_threshold:
+
+            arguments = topic_item['arguments']
+            # 3. Extract claims and evidences
+            claims, evidences = self.extract_claims_and_evidences(topic, arguments, claims_threshold, evidence_threshold)
             
-        # 4. Generate moral narratives
+            # 4. Tag claims and evidences with morals
+            #topic_item['arguments'] = self.assign_morals(topic_item['arguments'])
+            claims = self.assign_morals(claims)
+            evidences = self.assign_morals(evidences)
+            
+            topic_item['claims_and_evidences'] = {
+                'claims': claims,
+                'evidences': evidences,
+                'claims_threshold': claims_threshold,
+                'evidence_threshold': evidence_threshold
+            }
+
+            print('Number of retrieved claims:', len(claims))
+            print('Number of retrieved evidences:', len(evidences))
+
+            self.cache[topic] = topic_item
+        else:
+            print('Load claims and evidences from the cache!!')
+
+        # 5. Generate moral narratives
         for moral_class_name, morals in moral_dict.items():
             print('Topic:{}, Moral:{}'.format(topic, moral_class_name))
+
             
-            moral_arguments = self.filter_argumentative_texts(topic_item['arguments'], morals)
-            print('Number of arguments after filtering:', len(moral_arguments))
-            
-
-            if 'claims_and_evidences' not in topic_item or topic_item['claims_and_evidences']['claims_threshold'] != claims_threshold or topic_item['claims_and_evidences']['evidence_threshold'] != evidence_threshold:
-                # 5. Extract claims and evidences
-                claims, evidences = self.extract_claims_and_evidences(topic, moral_arguments, claims_threshold, evidence_threshold)
-                topic_item['claims_and_evidences'] = {
-                    'claims': claims,
-                    'evidences': evidences,
-                    'claims_threshold': claims_threshold,
-                    'evidence_threshold': evidence_threshold
-                }
-
-                self.cache[topic] = topic_item
-
-            else:
-                claims = topic_item['claims_and_evidences']['claims']
-                evidences = topic_item['claims_and_evidences']['evidences']
-                print('Retrieving claims and evidences from cache ', len(claims), len(evidences))
+            moral_claims   = self.filter_argumentative_texts(topic_item['claims_and_evidences']['claims'], morals)
+            moral_evidence = self.filter_argumentative_texts(topic_item['claims_and_evidences']['evidences'], morals)
+            print('Number of claims after filtering:', len(moral_claims))
+            print('Number of evidences after filtering:', len(moral_evidence))
             
             # for polarity is either con or pro
             narrative_key = '{}_{}_narrative'.format(moral_class_name, polarity)
             
-            if narrative_key not in topic_item:
-                # 6. Create narrative
-                polarity_enum = Polarity.PRO if polarity=='pro' else Polarity.CON
-                
-                moral_narrative = self.create_narrative(topic, topic_item['dc'][0], polarity_enum, claims, evidences)
-                if len(moral_narrative.paragraphs) < 3:
-                    print('Narrative is empty...')
-                topic_item[narrative_key] = str(moral_narrative)
-                self.cache[topic] = topic_item
-            else:
-                print('Retrieving Narrative from cahe...')
+            # 6. Create narrative
+            polarity_enum = Polarity.PRO if polarity=='pro' else Polarity.CON
+            
+            moral_narrative = self.create_narrative(topic, topic_item['dc'][0], polarity_enum, moral_claims, moral_evidence)
+            if len(moral_narrative.paragraphs) < 3:
+                print('Narrative is empty...')
+            topic_item[narrative_key] = str(moral_narrative)
+            self.cache[topic] = topic_item
                 
         
 

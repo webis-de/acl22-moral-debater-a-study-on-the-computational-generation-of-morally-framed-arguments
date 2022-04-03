@@ -1,16 +1,12 @@
+$(document).ready(function() {
+});
+
 function start_submit(){
   // input = prepare_input();
 
   let moral_array = [];
   let input_string='';
   
-  reqstatus = document.getElementById('reqprocessed');
-  reqstatus.innerHTML='process started';
-  moral1=document.getElementById('moral1');
-  moral2=document.getElementById('moral2');
-  moral3=document.getElementById('moral3');
-  moral4=document.getElementById('moral4');
-  moral5=document.getElementById('moral5');
   
   query_size = document.getElementById('size');
   stance_pro = document.getElementById('pro');
@@ -31,12 +27,12 @@ function start_submit(){
   }
 
 
-  if(moral1.checked){moral_array.push(moral1.name); input_string=input_string+moral1.name;}
-  if(moral2.checked){moral_array.push(moral2.name); input_string=input_string+'_'+moral2.name;}
-  if(moral3.checked){moral_array.push(moral3.name); input_string=input_string+'_'+moral3.name;}
-  if(moral4.checked){moral_array.push(moral4.name); input_string=input_string+'_'+moral4.name;}
-  if(moral5.checked){moral_array.push(moral5.name); input_string=input_string+'_'+moral5.name;}
-  
+  if(moral1.checked){moral_array.push(moral1.name); input_string=input_string+moral1.value;}
+  if(moral2.checked){moral_array.push(moral2.name); input_string=input_string+'_'+moral2.value;}
+  if(moral3.checked){moral_array.push(moral3.name); input_string=input_string+'_'+moral3.value;}
+  if(moral4.checked){moral_array.push(moral4.name); input_string=input_string+'_'+moral4.value;}
+  if(moral5.checked){moral_array.push(moral5.name); input_string=input_string+'_'+moral5.value;}
+
   // this will comprise of the topic, pro or con stance and query size
   var text_string = document.getElementById('topics').value;
   
@@ -49,22 +45,28 @@ function start_submit(){
     
   text_string = text_string + '_' + claim_value + '_' +evidence_value;
     
+  
+  $("#progressbar").attr("hidden", false)
+  $('#gen_btn').attr("disabled", true)
+  
 
-  var result = document.getElementById("resultsArea");
+  var result = document.getElementById("argument_area");
   result.value= '';
 
   const request = new XMLHttpRequest();
   request.open('GET','/submit/'+input_string+'$'+text_string);
   
   request.onreadystatechange = function () {
+      $("#progressbar").attr("hidden", true)
+      $('#gen_btn').attr("disabled", false)
+
       // In local files, status is 0 upon success in Mozilla Firefox
       if(request.readyState === XMLHttpRequest.DONE) {
         var status = request.status;
         if (status === 0 || (status >= 200 && status < 400)) {
           // The request has been completed successfully
-          var result = document.getElementById("resultsArea");
+          var result = document.getElementById("argument_area");
           result.value= request.responseText;
-          reqstatus.innerHTML='process completed'; 
           console.log('request completed');
         } else {
           // Oh no! There has been an error with the request!
@@ -73,6 +75,7 @@ function start_submit(){
     };
 
   request.send()
-    
+  
+  return true
   
 }
