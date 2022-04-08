@@ -1,15 +1,16 @@
-To run the code using FLASK:
+#### Installing server through Docker:
+- To run the code successfully, you need the following:
+	- Download the model and the moral-foundation dict from [here](https://drive.google.com/drive/folders/1ytIG3S4FFEDMCLFR23iLcv11HbrhhHuF?usp=sharing) into `moral_debater_code/moral_debater/resources`
+	- Create a `config.ini` file under `moral_debater_code/moral_debater/resources/` that contains the following:
+	```
+		[DATAPATHS]
+		moral_classifier_path=/app/moral_debater_code/moral_debater/resources/moral_classifier
+		emfd_moral_wordlist=/app/moral_debater_code/moral_debater/resources/eMFD_wordlist.csv
+		cache_path=/app/moral_debater_code/moral_debater/resources/fetched_arguments.json
 
-**Install torch:** 
-pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html
+		[KEYS]
+		ibm_api_key=<Project Debater API key>
+	```
+	Project Debater API key can be obtained from \href[here]{https://early-access-program.debater.res.ibm.com/}
 
-in the directory code, run the command: pip install -r requirements.txt
-
-In the config.ini file, which is located in code/moral_debater/resources, change the paths and add key.
-
-Then, on terminal type the following commands:
-
-export FLASK_APP=application.py
-export FLASK_ENV=development
-flask run --host=0.0.0.0
-
+	- Finally, run `docker build .`. This command will create a docker container and run the server under localhost:8080
