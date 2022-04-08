@@ -129,4 +129,4 @@ dmypy.json
 .pyre/
 
 
-code/moral_debater_code/moral_debater/resources/*
+moral-debater-server/moral_debater_code/moral_debater/resources/*
