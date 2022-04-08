@@ -1,0 +1,13 @@
+Steps for installing:
+
+- cd debater_python_api
+- pip install .
+- cd ../moral_debater_code
+- pip install .
+- python3 -m spacy download en
+- cp -r moral_debater/resources/moral_classifier /tmp/moral_debater
+- cp  moral_debater/resources/eMFD_wordlist.csv /tmp/eMFD_wordlist.csv
+- cp  moral_debater/resources/fetched_arguments.json /tmp/fetched_arguments.json
+- cd ../moral_debater_api
+- pip install .
+- waitress-serve --call 'moral_debater_i:create_app'

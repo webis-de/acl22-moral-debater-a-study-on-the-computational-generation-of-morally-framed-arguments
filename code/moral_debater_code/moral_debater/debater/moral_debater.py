@@ -24,7 +24,9 @@ class MoralDebater(object):
 
     def __init__(self):
         ibm_api_key = Config.config().get(section='KEYS', option='ibm_api_key')
-        model_path = Config.config().get(section='DATAPATHS', option='moral_classifier_path')
+        model_path  = Config.config().get(section='DATAPATHS', option='moral_classifier_path')
+        
+        self.cache_path  = Config.config().get(section='DATAPATHS', option='cache_path')
 
         self.debater_api = DebaterApi(ibm_api_key)
 
@@ -35,12 +37,11 @@ class MoralDebater(object):
         self.sentencizer.add_pipe(self.sentencizer.create_pipe('sentencizer'))
         
         self.cache = {}
-        self.cache_path = './cache_path.json'
-        
+        print(self.cache_path)
         if os.path.exists(self.cache_path):
             print('Loading cache...')
             self.cache = json.load(open(self.cache_path))
-
+            
     def get_concepts(self, topic):
         term_wikifier_client = self.debater_api.get_term_wikifier_client()
         annotation_arrays = term_wikifier_client.run([topic])

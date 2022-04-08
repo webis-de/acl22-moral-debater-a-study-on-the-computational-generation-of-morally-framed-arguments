@@ -19,6 +19,7 @@ comments_endpoint = '/comments'
 kp_extraction_endpoint = '/kp_extraction'
 data_endpoint = '/data'
 report_endpoint = '/report'
+comments_limit_endpoint = '/comments_limit'
 self_check_endpoint = '/self_check'
 
 
@@ -147,7 +148,7 @@ class KpAnalysisUtils:
                 kps_have_stance = True
 
             summary_rows.append(summary_row)
-            kp_to_parent[kp] = keypoint_matching.get("parent", None)
+            kp_to_parent[kp] = keypoint_matching.get("parent", 'root')
             for match in keypoint_matching['matching']:
                 match_row = [kp, match["sentence_text"], match["score"], match["comment_id"], match["sentence_id"],
                              match["sents_in_comment"], match["span_start"], match["span_end"], match["num_tokens"],
@@ -160,7 +161,7 @@ class KpAnalysisUtils:
                     match_row.append(kp_stance)
                 matchings_rows.append(match_row)
 
-        summary_rows = sorted(summary_rows, key=lambda x: x[4], reverse=True)
+        summary_rows = sorted(summary_rows, key=lambda x: x[1], reverse=True)
         summary_cols = ["kp", "#sentences", 'sentences_coverage', '#comments', 'comments_coverage']
         if kps_have_stance:
             summary_cols.append('stance')
@@ -179,7 +180,7 @@ class KpAnalysisUtils:
 
             hierarchy_data = [[p, len(parent_to_kps[p]), kp_to_n_args_sub[p], parent_to_kps[p]] for p in parent_to_kps]
             hierarchy_df = pd.DataFrame(hierarchy_data, columns=["top_kp", "#level_2_kps", "#sents_in_subtree", "level_2_kps"])
-            hierarchy_df.sort_values(by=["#sents_in_subtree"], ascending=False)
+            hierarchy_df.sort_values(by=["#sents_in_subtree"], ascending=False, inplace=True)
 
             hierarchy_file = result_file.replace(".csv", "_kp_hierarchy.csv")
             _write_df_to_file(hierarchy_df, hierarchy_file)
@@ -313,6 +314,7 @@ class KpAnalysisClient(AbstractClient):
         assert self._is_list_of_strings(comments_texts), 'comment_texts must be a list of strings'
         assert self._is_list_of_strings(comments_ids), 'comment_ids must be a list of strings'
         assert len([c for c in comments_texts if len(c) > 1000]) == 0, 'comment_texts must be shorter then 1000 characters'
+        assert len([c for c in comments_texts if c is None or c == '' or len(c) == 0]) == 0, 'comment_texts must not have an empty string in it'
         logging.info('uploading %d comments in batches' % len(comments_ids))
 
         ids_texts = list(zip(comments_ids, comments_texts))
@@ -511,6 +513,14 @@ class KpAnalysisClient(AbstractClient):
           * 'kp_analysis_status': a list of all key point analysis jobs that the user have/had with all the relevant details and parameters for each job.
         '''
         return self._get(self.host + report_endpoint, {'days_ago': days_ago}, timeout=180)
+
+    def get_comments_limit(self):
+        '''
+        Retreives a json with the permitted number of comments per KPA job.
+        returns:
+          * 'n_comments_limit': The maximal number of comments permitted per KPA job (None if there is no limit).
+        '''
+        return self._get(self.host + comments_limit_endpoint, {}, timeout=180)
 
     def run_self_check(self):
         '''

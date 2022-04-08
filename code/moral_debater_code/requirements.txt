@@ -1,0 +1,6 @@
+transformers
+spacy==2.2.1
+sklearn
+numpy
+nltk
+moralstrength
